@@ -1,0 +1,43 @@
+name: Otomatik Dizi ve M3U Güncelleyici
+
+on:
+  # Belirli aralıklarla otomatik çalışması için (Örn: Her 6 saatte bir)
+  schedule:
+    - cron: '0 */6 * * *'
+  
+  # İsterseniz GitHub panelinden manuel (elle) tetikleyebilmek için
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Repository'yi container'a klonla
+      - name: Kodları Klonla
+        uses: actions/checkout@v4
+
+      # 2. Python ortamını ayarla
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # 3. Gerekli kütüphaneleri yükle (requests kütüphanesi şarttır)
+      - name: Bağımlılıkları Yükle
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      # 4. Python betiğini çalıştır (Betik adınızı buraya yazın, örn: main.py)
+      - name: Betiği Çalıştır
+        run: python series.py
+
+      # 5. Üretilen yeni JSON ve M3U dosyalarını GitHub deposuna geri yükle
+      - name: Değişiklikleri Kaydet ve Gönder
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Otomatik Dizi ve M3U Listesi Güncellendi [skip ci]"
+          branch: main
+          file_pattern: output/*
